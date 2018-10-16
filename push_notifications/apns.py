@@ -29,11 +29,13 @@ class APNSServerError(APNSError):
 		self.status = status
 
 
-def _apns_create_socket(certfile=None, application_id=None):
+def _apns_create_socket(certfile=None, application_id=None, use_sandbox=None):
+	if use_sandbox is None:
+		 use_sandbox = get_manager().get_apns_use_sandbox(application_id)
 	certfile = certfile or get_manager().get_apns_certificate(application_id)
 	client = apns2_client.APNsClient(
 		certfile,
-		use_sandbox=get_manager().get_apns_use_sandbox(application_id),
+		use_sandbox=use_sandbox,
 		use_alternative_port=get_manager().get_apns_use_alternative_port(application_id)
 	)
 	client.connect()
@@ -62,7 +64,8 @@ def _apns_prepare(
 def _apns_send(
 	registration_id, alert, batch=False, application_id=None, certfile=None, **kwargs
 ):
-	client = _apns_create_socket(certfile=certfile, application_id=application_id)
+	use_sandbox = kwargs.pop('use_sandbox', None)
+	client = _apns_create_socket(certfile=certfile, application_id=application_id, use_sandbox=use_sandbox)
 
 	notification_kwargs = {}
 
